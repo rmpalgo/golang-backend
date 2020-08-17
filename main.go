@@ -10,6 +10,15 @@ import (
 	"time"
 )
 
+//Person struct (aka Person class)
+type Person struct {
+	ID        string `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"first_name"`
+	DateJoined string `json:"date_joined"`
+	DateUpdated string `json:"date_updated"`
+}
+
 type Config struct {
 	Output output
 	Database database
