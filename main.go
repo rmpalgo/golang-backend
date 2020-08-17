@@ -26,6 +26,7 @@ type output struct {
 	Format string
 }
 
+
 func main(){
 	currentTime := time.Now()
 	var conf Config
@@ -41,15 +42,14 @@ func main(){
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-
+	var first_name string
 	defer db.Close()
 
-	var count int
 
-	err = db.QueryRow("SELECT 1 + 1").Scan(&count)
+	err = db.QueryRow("SELECT first_name from persons").Scan(&first_name)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(count)
+	fmt.Println(first_name)
 	fmt.Println("ShortYear : ", currentTime.Format("06-Jan-02"))
 }
