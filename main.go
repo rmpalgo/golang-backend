@@ -49,6 +49,13 @@ func main(){
 
 	router := mux.NewRouter()
 
+	//CRUD functionalities -- REST API endpoints
+	router.HandleFunc("/persons", getPersons).Methods("GET")
+	router.HandleFunc("/persons", createPerson).Methods("POST")
+	router.HandleFunc("/persons/{id}", getPerson).Methods("GET")
+	router.HandleFunc("/posts/{id}", updatePerson).Methods("PUT")
+	router.HandleFunc("/posts/{id}", deletePerson).Methods("DELETE")
+
 	http.ListenAndServe(":8000", router)
 
 
