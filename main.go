@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
+	"net/http"
 	"time"
 )
 
@@ -42,14 +44,18 @@ func main(){
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	var first_name string
+	//var first_name string
 	defer db.Close()
 
+	router := mux.NewRouter()
 
-	err = db.QueryRow("SELECT first_name from persons").Scan(&first_name)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(first_name)
+	http.ListenAndServe(":8000", router)
+
+
+	//err = db.QueryRow("SELECT first_name from persons").Scan(&first_name)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println(first_name)
 	fmt.Println("ShortYear : ", currentTime.Format("06-Jan-02"))
 }
