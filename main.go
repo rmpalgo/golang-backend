@@ -1,77 +1,51 @@
 package main
-
 import (
 	"database/sql"
-	"fmt"
-	"github.com/BurntSushi/toml"
-	_ "github.com/go-sql-driver/mysql"
+	"encoding/json"
+	_"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"net/http"
-	"time"
 )
-
-//Person struct (aka Person class)
 type Person struct {
-	ID        string `json:"id"`
+	ID string `json:"id"`
 	FirstName string `json:"first_name"`
-	LastName  string `json:"first_name"`
+	LastName string `json:"last_name"`
 	DateJoined string `json:"date_joined"`
 	DateUpdated string `json:"date_updated"`
 }
+var db *sql.DB
+var err error
 
-type Config struct {
-	Output output
-	Database database
-}
-
-type database struct {
-	Server string
-	Port string
-	Database string
-	User string
-	Password string
-}
-
-type output struct {
-	Directory string
-	Format string
-}
-
-
-func main(){
-	currentTime := time.Now()
-	var conf Config
-	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
-		fmt.Println(err)
-	}
-	fmt.Printf("%#v\n", conf)
-
-	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", conf.Database.User, conf.Database.Password, conf.Database.Server, conf.Database.Port, conf.Database.Database)
-
-	db, err := sql.Open("mysql", connString)
-
+func getPersons(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var persons []Person
+	result, err := db.Query("SELECT * from persons")
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err.Error())
 	}
-	//var first_name string
+	defer result.Close()
+	for result.Next() {
+		var person Person
+		err := result.Scan(&person.ID, &person.FirstName, &person.LastName, &person.DateJoined, &person.DateUpdated)
+		if err != nil {
+			panic(err.Error())
+		}
+		persons = append(persons, person)
+	}
+	json.NewEncoder(w).Encode(persons)
+}
+
+func main() {
+	db, err = sql.Open("mysql",   "golang:password@tcp(127.0.0.1:3306)/example_db")
+	if err != nil {
+		panic(err.Error())
+	}
 	defer db.Close()
-
 	router := mux.NewRouter()
-
-	//CRUD functionalities -- REST API endpoints
 	router.HandleFunc("/persons", getPersons).Methods("GET")
-	router.HandleFunc("/persons", createPerson).Methods("POST")
-	router.HandleFunc("/persons/{id}", getPerson).Methods("GET")
-	router.HandleFunc("/posts/{id}", updatePerson).Methods("PUT")
-	router.HandleFunc("/posts/{id}", deletePerson).Methods("DELETE")
-
+	//router.HandleFunc("/persons", createPerson).Methods("person")
+	//router.HandleFunc("/persons/{id}", getPerson).Methods("GET")
+	//router.HandleFunc("/persons/{id}", updatePerson).Methods("PUT")
+	//router.HandleFunc("/persons/{id}", deletePerson).Methods("DELETE")
 	http.ListenAndServe(":8000", router)
-
-
-	//err = db.QueryRow("SELECT first_name from persons").Scan(&first_name)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Println(first_name)
-	fmt.Println("ShortYear : ", currentTime.Format("06-Jan-02"))
 }
