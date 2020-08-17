@@ -1,1 +1,55 @@
 package main
+
+import (
+	"database/sql"
+	"fmt"
+	"github.com/BurntSushi/toml"
+	_ "github.com/go-sql-driver/mysql"
+	"time"
+)
+
+type Config struct {
+	Output output
+	Database database
+}
+
+type database struct {
+	Server string
+	Port string
+	Database string
+	User string
+	Password string
+}
+
+type output struct {
+	Directory string
+	Format string
+}
+
+func main(){
+	currentTime := time.Now()
+	var conf Config
+	if _, err := toml.DecodeFile("config.toml", &conf); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Printf("%#v\n", conf)
+
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", conf.Database.User, conf.Database.Password, conf.Database.Server, conf.Database.Port, conf.Database.Database)
+
+	db, err := sql.Open("mysql", connString)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer db.Close()
+
+	var count int
+
+	err = db.QueryRow("SELECT 1 + 1").Scan(&count)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(count)
+	fmt.Println("ShortYear : ", currentTime.Format("06-Jan-02"))
+}

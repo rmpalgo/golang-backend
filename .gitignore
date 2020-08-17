@@ -8,3 +8,5 @@
 # Testing
 *.test
 *.tmp
+
+config.toml
