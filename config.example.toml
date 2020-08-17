@@ -1,0 +1,11 @@
+# filename: config.toml
+[database]
+server = "127.0.0.1"
+port = "3306"
+database = "example_db"
+user = "example_user"
+password = "some_super_strange_long_password"
+
+[output]
+directory = "./output"
+format = "toml"
