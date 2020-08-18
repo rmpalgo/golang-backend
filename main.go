@@ -55,7 +55,7 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 	//MySQL statement opening connection to DB similar to JDBC
 	w.Header().Set("Content-Type", "application/json")
 
-	stmt, err := db.Prepare("INSERT INTO persons(first_name, last_name, date_joined, date_updated) VALUES(?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO persons(first_name, last_name, date_joined, date_updated, job_id) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -71,7 +71,9 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 	lastName := keyVal["last_name"]
 	dateJoined := keyVal["date_joined"]
 	dateUpdated := keyVal["date_updated"]
-	_, err = stmt.Exec(firstName, lastName, dateJoined, dateUpdated)
+	jobId := keyVal["job_id"]
+
+	_, err = stmt.Exec(firstName, lastName, dateJoined, dateUpdated, jobId)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -98,7 +100,7 @@ func getPerson(w http.ResponseWriter, r *http.Request) {
 
 func updatePerson(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	stmt, err := db.Prepare("UPDATE persons SET first_name = ?, last_name = ?, date_updated = ? WHERE id = ?")
+	stmt, err := db.Prepare("UPDATE persons SET first_name = ?, last_name = ?, date_updated = ?, job_id = ? WHERE id = ?")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -111,7 +113,8 @@ func updatePerson(w http.ResponseWriter, r *http.Request) {
 	first_name := keyVal["first_name"]
 	last_name := keyVal["last_name"]
 	dateUpdated := keyVal["date_updated"]
-	_, err = stmt.Exec(first_name, last_name, dateUpdated, params["id"])
+	jobId := keyVal["job_id"]
+	_, err = stmt.Exec(first_name, last_name, dateUpdated, jobId, params["id"])
 	if err != nil {
 		panic(err.Error())
 	}
