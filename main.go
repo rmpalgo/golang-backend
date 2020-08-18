@@ -31,7 +31,7 @@ func getPersons(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//MySQL statement opening connection to DB similar to JDBC
-	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.title, J.salary from persons as P JOIN jobs AS J ON P.job_id = J.id")
+	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN jobs AS J ON P.job_id = J.id")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -41,11 +41,11 @@ func getPersons(w http.ResponseWriter, r *http.Request) {
 	for result.Next() {
 		var person Person
 		var job Job
-		err := result.Scan(&person.ID, &person.FirstName, &person.LastName, &person.DateJoined, &person.DateUpdated, &job.Title, &job.Salary)
+		err := result.Scan(&person.ID, &person.FirstName, &person.LastName, &person.DateJoined, &person.DateUpdated, &job.ID, &job.Title, &job.Salary)
 		if err != nil {
 			panic(err.Error())
 		}
-		persons = append(persons, Person{ID: person.ID, FirstName: person.FirstName, LastName: person.LastName, DateJoined: person.DateJoined, DateUpdated: person.DateUpdated, Job: &Job{Title: job.Title, Salary: job.Salary}})
+		persons = append(persons, Person{ID: person.ID, FirstName: person.FirstName, LastName: person.LastName, DateJoined: person.DateJoined, DateUpdated: person.DateUpdated, Job: &Job{ID: job.ID, Title: job.Title, Salary: job.Salary}})
 	}
 	json.NewEncoder(w).Encode(persons)
 }
