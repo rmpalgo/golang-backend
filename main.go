@@ -10,32 +10,42 @@ import (
 	"net/http"
 )
 type Person struct {
-	ID string `json:"id"`
+	ID int `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName string `json:"last_name"`
+	Job 	*Job    `json:"job"`
 	DateJoined string `json:"date_joined"`
 	DateUpdated string `json:"date_updated"`
 }
+
+type Job struct {
+	ID int `json:"id"`
+	Title string `json:"title"`
+	Salary string `json:"salary"`
+}
+
 var db *sql.DB
 var err error
 
 func getPersons(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var persons []Person
 
 	//MySQL statement opening connection to DB similar to JDBC
-	result, err := db.Query("SELECT * from persons")
+	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.title, J.salary from persons as P JOIN jobs AS J ON P.job_id = J.id")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer result.Close()
+
+	var persons []Person
 	for result.Next() {
 		var person Person
-		err := result.Scan(&person.ID, &person.FirstName, &person.LastName, &person.DateJoined, &person.DateUpdated)
+		var job Job
+		err := result.Scan(&person.ID, &person.FirstName, &person.LastName, &person.DateJoined, &person.DateUpdated, &job.Title, &job.Salary)
 		if err != nil {
 			panic(err.Error())
 		}
-		persons = append(persons, person)
+		persons = append(persons, Person{ID: person.ID, FirstName: person.FirstName, LastName: person.LastName, DateJoined: person.DateJoined, DateUpdated: person.DateUpdated, Job: &Job{Title: job.Title, Salary: job.Salary}})
 	}
 	json.NewEncoder(w).Encode(persons)
 }
