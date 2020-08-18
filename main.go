@@ -27,11 +27,12 @@ type Job struct {
 var db *sql.DB
 var err error
 
+//Persons
 func getPersons(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//MySQL statement opening connection to DB similar to JDBC
-	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN jobs AS J ON P.job_id = J.id")
+	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN strutil AS J ON P.job_id = J.id")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -83,7 +84,7 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 func getPerson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN jobs AS J ON P.job_id = J.id WHERE P.id = ?", params["id"])
+	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN strutil AS J ON P.job_id = J.id WHERE P.id = ?", params["id"])
 	if err != nil {
 		panic(err.Error())
 	}
@@ -136,6 +137,31 @@ func deletePerson(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Person with ID = %s was deleted", params["id"])
 }
 
+//Jobs
+
+
+func getJobs(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	//MySQL statement opening connection to DB similar to JDBC
+	result, err := db.Query("SELECT id, title, salary FROM jobs")
+	if err != nil {
+		panic(err.Error())
+	}
+	defer result.Close()
+
+	var jobs []Job
+	for result.Next() {
+		var job Job
+		err := result.Scan(&job.ID, &job.Title, &job.Salary)
+		if err != nil {
+			panic(err.Error())
+		}
+		jobs = append(jobs, job)
+	}
+	json.NewEncoder(w).Encode(jobs)
+}
+
 
 
 func main() {
@@ -145,10 +171,14 @@ func main() {
 	}
 	defer db.Close()
 	router := mux.NewRouter()
+	//Persons
 	router.HandleFunc("/persons", getPersons).Methods("GET")
 	router.HandleFunc("/persons", createPerson).Methods("POST")
 	router.HandleFunc("/persons/{id}", getPerson).Methods("GET")
 	router.HandleFunc("/persons/{id}", updatePerson).Methods("PUT")
 	router.HandleFunc("/persons/{id}", deletePerson).Methods("DELETE")
+
+	//Jobs
+	router.HandleFunc("/jobs", getJobs).Methods("GET")
 	http.ListenAndServe(":8000", router)
 }
