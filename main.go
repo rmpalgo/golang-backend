@@ -68,6 +68,24 @@ func createPerson(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "New post was created")
 }
 
+func getPerson(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	result, err := db.Query("SELECT * FROM persons WHERE id = ?", params["id"])
+	if err != nil {
+		panic(err.Error())
+	}
+	defer result.Close()
+	var person Person
+	for result.Next() {
+		err := result.Scan(&person.ID, &person.FirstName, &person.LastName, &person.DateJoined, &person.DateUpdated)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+	json.NewEncoder(w).Encode(person)
+}
+
 
 
 func main() {
@@ -79,7 +97,7 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/persons", getPersons).Methods("GET")
 	router.HandleFunc("/persons", createPerson).Methods("POST")
-	//router.HandleFunc("/persons/{id}", getPerson).Methods("GET")
+	router.HandleFunc("/persons/{id}", getPerson).Methods("GET")
 	//router.HandleFunc("/persons/{id}", updatePerson).Methods("PUT")
 	//router.HandleFunc("/persons/{id}", deletePerson).Methods("DELETE")
 	http.ListenAndServe(":8000", router)
