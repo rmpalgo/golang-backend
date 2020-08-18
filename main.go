@@ -277,9 +277,10 @@ func getJob(w http.ResponseWriter, r *http.Request) {
 
 //foreign key constraint
 func deleteJob(w http.ResponseWriter, r *http.Request) {
-
-	//trying to change job_id = null prior to deleting the category
+	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
+
+	//MySQL query to update title and salary
 	stmt, err := db.Prepare("UPDATE persons SET job_id = null WHERE id = ?")
 	if err != nil {
 		panic(err.Error())
@@ -288,25 +289,26 @@ func deleteJob(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err.Error())
 	}
+
+
 	keyVal := make(map[string]string)
 	json.Unmarshal(body, &keyVal)
-	dateUpdated := keyVal["date_updated"]
-	jobId := keyVal["job_id"]
-	_, err = stmt.Exec(dateUpdated, jobId, params["id"])
-	if err != nil {
-		panic(err.Error())
-	}
-
-	//delete category but have issue with fk constraints
-	stmt, err = db.Prepare("DELETE FROM jobs WHERE id = ?")
-	if err != nil {
-		panic(err.Error())
-	}
 	_, err = stmt.Exec(params["id"])
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Fprintf(w, "Job with ID = %s was deleted", params["id"])
+	fmt.Fprintf(w, "Job with ID = %s was updated", params["id"])
+
+	////delete category but have issue with fk constraints
+	//stmt, err = db.Prepare("DELETE FROM jobs WHERE id = ?")
+	//if err != nil {
+	//	panic(err.Error())
+	//}
+	//_, err = stmt.Exec(params["id"])
+	//if err != nil {
+	//	panic(err.Error())
+	//}
+	////fmt.Fprintf(w, "Job with ID = %s was deleted", params["id"])
 }
 
 
