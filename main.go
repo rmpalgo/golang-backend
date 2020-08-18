@@ -108,6 +108,19 @@ func updatePerson(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Person with ID = %s was updated", params["id"])
 }
 
+func deletePerson(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("DELETE FROM persons WHERE id = ?")
+	if err != nil {
+		panic(err.Error())
+	}
+	_, err = stmt.Exec(params["id"])
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Fprintf(w, "Person with ID = %s was deleted", params["id"])
+}
+
 
 
 func main() {
@@ -121,6 +134,6 @@ func main() {
 	router.HandleFunc("/persons", createPerson).Methods("POST")
 	router.HandleFunc("/persons/{id}", getPerson).Methods("GET")
 	router.HandleFunc("/persons/{id}", updatePerson).Methods("PUT")
-	//router.HandleFunc("/persons/{id}", deletePerson).Methods("DELETE")
+	router.HandleFunc("/persons/{id}", deletePerson).Methods("DELETE")
 	http.ListenAndServe(":8000", router)
 }
