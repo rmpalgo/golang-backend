@@ -187,6 +187,27 @@ func createJob(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "New job was created")
 }
 
+func updateJob(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("UPDATE jobs SET title = ?, salary = ? WHERE id = ?")
+	if err != nil {
+		panic(err.Error())
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err.Error())
+	}
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	title := keyVal["title"]
+	salary := keyVal["salary"]
+	_, err = stmt.Exec(title, salary, params["id"])
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Fprintf(w, "Job with ID = %s was updated", params["id"])
+}
+
 func getJob(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
@@ -226,6 +247,7 @@ func main() {
 	router.HandleFunc("/jobs", getJobs).Methods("GET")
 	router.HandleFunc("/jobs", createJob).Methods("POST")
 	router.HandleFunc("/jobs/{id}", getJob).Methods("GET")
+	router.HandleFunc("/jobs/{id}", updateJob).Methods("PUT")
 
 	http.ListenAndServe(":8000", router)
 }
