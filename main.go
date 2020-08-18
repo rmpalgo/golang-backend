@@ -138,8 +138,6 @@ func deletePerson(w http.ResponseWriter, r *http.Request) {
 }
 
 //Jobs
-
-
 func getJobs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -162,6 +160,33 @@ func getJobs(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(jobs)
 }
 
+func createJob(w http.ResponseWriter, r *http.Request) {
+
+	//MySQL statement opening connection to DB similar to JDBC
+	w.Header().Set("Content-Type", "application/json")
+
+	stmt, err := db.Prepare("INSERT INTO jobs(title, salary) VALUES(?, ?)")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	title := keyVal["title"]
+	salary := keyVal["salary"]
+
+	_, err = stmt.Exec(title, salary)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Fprintf(w, "New job was created")
+}
+
 
 
 func main() {
@@ -180,5 +205,7 @@ func main() {
 
 	//Jobs
 	router.HandleFunc("/jobs", getJobs).Methods("GET")
+	router.HandleFunc("/jobs", createJob).Methods("POST")
+
 	http.ListenAndServe(":8000", router)
 }
