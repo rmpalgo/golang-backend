@@ -86,6 +86,28 @@ func getPerson(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(person)
 }
 
+func updatePerson(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	stmt, err := db.Prepare("UPDATE persons SET first_name = ?, last_name = ?, date_updated = ? WHERE id = ?")
+	if err != nil {
+		panic(err.Error())
+	}
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err.Error())
+	}
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+	first_name := keyVal["first_name"]
+	last_name := keyVal["last_name"]
+	dateUpdated := keyVal["date_updated"]
+	_, err = stmt.Exec(first_name, last_name, dateUpdated, params["id"])
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Fprintf(w, "Person with ID = %s was updated", params["id"])
+}
+
 
 
 func main() {
@@ -98,7 +120,7 @@ func main() {
 	router.HandleFunc("/persons", getPersons).Methods("GET")
 	router.HandleFunc("/persons", createPerson).Methods("POST")
 	router.HandleFunc("/persons/{id}", getPerson).Methods("GET")
-	//router.HandleFunc("/persons/{id}", updatePerson).Methods("PUT")
+	router.HandleFunc("/persons/{id}", updatePerson).Methods("PUT")
 	//router.HandleFunc("/persons/{id}", deletePerson).Methods("DELETE")
 	http.ListenAndServe(":8000", router)
 }
