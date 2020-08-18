@@ -280,7 +280,7 @@ func deleteJob(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
 
-	//MySQL query to update title and salary
+	//MySQL statement to set the specified job_id to null to severe fk constraint
 	stmt, err := db.Prepare("UPDATE persons SET job_id = null WHERE job_id = ?")
 	if err != nil {
 		panic(err.Error())
@@ -300,6 +300,7 @@ func deleteJob(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Job with ID = %s was updated", params["id"])
 
 
+	//this delete the actual job based on id in table jobs
 	stmt, err = db.Prepare("DELETE FROM jobs WHERE id = ?")
 	if err != nil {
 		panic(err.Error())
