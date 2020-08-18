@@ -187,6 +187,25 @@ func createJob(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "New job was created")
 }
 
+func getJob(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	result, err := db.Query("SELECT id, title, salary FROM jobs WHERE jobs.id = ?", params["id"])
+	if err != nil {
+		panic(err.Error())
+	}
+	defer result.Close()
+	var job Job
+	for result.Next() {
+		err := result.Scan(&job.ID, &job.Title, &job.Salary)
+		if err != nil {
+			panic(err.Error())
+		}
+		job = Job{job.ID, job.Title, job.Salary}
+	}
+	json.NewEncoder(w).Encode(job)
+}
+
 
 
 func main() {
@@ -206,6 +225,7 @@ func main() {
 	//Jobs
 	router.HandleFunc("/jobs", getJobs).Methods("GET")
 	router.HandleFunc("/jobs", createJob).Methods("POST")
+	router.HandleFunc("/jobs/{id}", getJob).Methods("GET")
 
 	http.ListenAndServe(":8000", router)
 }
