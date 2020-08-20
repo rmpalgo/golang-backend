@@ -315,7 +315,6 @@ func deleteJob(w http.ResponseWriter, r *http.Request) {
 
 
 
-
 func main() {
 
 	//opening MySQL connection
