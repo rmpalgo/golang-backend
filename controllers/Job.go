@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"golang-backend/models"
 	"io/ioutil"
 	"net/http"
 )
@@ -15,16 +15,16 @@ func GetJobs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//MySQL query to grab id, title, salary, from table jobs
-	result, err := db.Query("SELECT id, title, salary FROM jobs")
+	result, err := Data.Query("SELECT id, title, salary FROM jobs")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer result.Close()
 
 	// Array of Job struct
-	var jobs []Job
+	var jobs []models.Job
 	for result.Next() {
-		var job Job
+		var job models.Job
 		err := result.Scan(&job.ID, &job.Title, &job.Salary)
 		if err != nil {
 			panic(err.Error())
@@ -40,7 +40,7 @@ func CreateJob(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//MySQL statement with sql-driver insert new job with values title, salary
-	stmt, err := db.Prepare("INSERT INTO jobs(title, salary) VALUES(?, ?)")
+	stmt, err := Data.Prepare("INSERT INTO jobs(title, salary) VALUES(?, ?)")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -71,7 +71,7 @@ func UpdateJob(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	//MySQL query to update title and salary
-	stmt, err := db.Prepare("UPDATE jobs SET title = ?, salary = ? WHERE id = ?")
+	stmt, err := Data.Prepare("UPDATE jobs SET title = ?, salary = ? WHERE id = ?")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -95,18 +95,18 @@ func UpdateJob(w http.ResponseWriter, r *http.Request) {
 func GetJob(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	result, err := db.Query("SELECT id, title, salary FROM jobs WHERE jobs.id = ?", params["id"])
+	result, err := Data.Query("SELECT id, title, salary FROM jobs WHERE jobs.id = ?", params["id"])
 	if err != nil {
 		panic(err.Error())
 	}
 	defer result.Close()
-	var job Job
+	var job models.Job
 	for result.Next() {
 		err := result.Scan(&job.ID, &job.Title, &job.Salary)
 		if err != nil {
 			panic(err.Error())
 		}
-		job = Job{job.ID, job.Title, job.Salary}
+		job = models.Job{job.ID, job.Title, job.Salary}
 	}
 	json.NewEncoder(w).Encode(job)
 }
@@ -117,7 +117,7 @@ func DeleteJob(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	//MySQL statement to set the specified job_id to null to severe fk constraint
-	stmt, err := db.Prepare("UPDATE persons SET job_id = null WHERE job_id = ?")
+	stmt, err := Data.Prepare("UPDATE persons SET job_id = null WHERE job_id = ?")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -137,7 +137,7 @@ func DeleteJob(w http.ResponseWriter, r *http.Request) {
 
 
 	//this delete the actual job based on id in table jobs
-	stmt, err = db.Prepare("DELETE FROM jobs WHERE id = ?")
+	stmt, err = Data.Prepare("DELETE FROM jobs WHERE id = ?")
 	if err != nil {
 		panic(err.Error())
 	}

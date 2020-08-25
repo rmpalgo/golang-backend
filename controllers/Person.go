@@ -5,31 +5,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"golang-backend/models"
 	"io/ioutil"
 	"net/http"
 )
 
-var db *sql.DB
-var err error
+var Data *sql.DB
+var Err error
 
 //Persons
 func GetPersons(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	//MySQL statement opening connection to DB and query all from Table persons
-	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN jobs AS J ON P.job_id = J.id")
+	//MySQL statement opening connection to Data and query all from Table persons
+	result, err := Data.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN jobs AS J ON P.job_id = J.id")
 	if err != nil {
 		panic(err.Error())
 	}
 	defer result.Close()
 
 	//setup Person arrays
-	var persons []Person
+	var persons []models.Person
 	for result.Next() {
 
 		//Person and Job struct models
-		var person Person
-		var job Job
+		var person models.Person
+		var job models.Job
 
 		//the resulting query mapped to person and job fields
 		err := result.Scan(&person.ID, &person.FirstName, &person.LastName, &person.DateJoined, &person.DateUpdated, &job.ID, &job.Title, &job.Salary)
@@ -38,7 +39,7 @@ func GetPersons(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//append each Person to persons array
-		persons = append(persons, Person{ID: person.ID, FirstName: person.FirstName, LastName: person.LastName, DateJoined: person.DateJoined, DateUpdated: person.DateUpdated, Job: &Job{ID: job.ID, Title: job.Title, Salary: job.Salary}})
+		persons = append(persons, models.Person{ID: person.ID, FirstName: person.FirstName, LastName: person.LastName, DateJoined: person.DateJoined, DateUpdated: person.DateUpdated, Job: &models.Job{ID: job.ID, Title: job.Title, Salary: job.Salary}})
 	}
 	json.NewEncoder(w).Encode(persons)
 }
@@ -47,7 +48,7 @@ func CreatePerson(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	//MySQL statement to INSERT person
-	stmt, err := db.Prepare("INSERT INTO persons(first_name, last_name, date_joined, date_updated, job_id) VALUES(?, ?, ?, ?, ?)")
+	stmt, err := Data.Prepare("INSERT INTO persons(first_name, last_name, date_joined, date_updated, job_id) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -81,15 +82,15 @@ func GetPerson(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	//return join table persons and jobs
-	result, err := db.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN strutil AS J ON P.job_id = J.id WHERE P.id = ?", params["id"])
+	result, err := Data.Query("SELECT P.id, P.first_name, P.last_name, P.date_joined, P.date_updated, J.id, J.title, J.salary from persons as P JOIN strutil AS J ON P.job_id = J.id WHERE P.id = ?", params["id"])
 	if err != nil {
 		panic(err.Error())
 	}
 	defer result.Close()
 
 	//Model to use
-	var person Person
-	var job Job
+	var person models.Person
+	var job models.Job
 	for result.Next() {
 
 		//mapping the returned query with Person and Job struct
@@ -99,7 +100,7 @@ func GetPerson(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//set Person to query result
-		person = Person{ID: person.ID, FirstName: person.FirstName, LastName: person.LastName, DateJoined: person.DateJoined, DateUpdated: person.DateUpdated, Job: &Job{ID: job.ID, Title: job.Title, Salary: job.Salary}}
+		person = models.Person{ID: person.ID, FirstName: person.FirstName, LastName: person.LastName, DateJoined: person.DateJoined, DateUpdated: person.DateUpdated, Job: &models.Job{ID: job.ID, Title: job.Title, Salary: job.Salary}}
 	}
 
 	//return Person as json
@@ -112,7 +113,7 @@ func UpdatePerson(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	//MySQL query for update person first name, last name, date update, and job id, based on param id
-	stmt, err := db.Prepare("UPDATE persons SET first_name = ?, last_name = ?, date_updated = ?, job_id = ? WHERE id = ?")
+	stmt, err := Data.Prepare("UPDATE persons SET first_name = ?, last_name = ?, date_updated = ?, job_id = ? WHERE id = ?")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -145,7 +146,7 @@ func DeletePerson(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
 	//MySQL query to delete person with id param
-	stmt, err := db.Prepare("DELETE FROM persons WHERE id = ?")
+	stmt, err := Data.Prepare("DELETE FROM persons WHERE id = ?")
 	if err != nil {
 		panic(err.Error())
 	}
